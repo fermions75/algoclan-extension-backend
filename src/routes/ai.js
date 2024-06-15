@@ -1,11 +1,17 @@
 // src/routes/protected.js
 import express from "express";
 import authMiddleware from "../middlewares/authMiddleware.js";
+import { getLinkedInComment } from "../controllers/aiController.js";
 
 const router = express.Router();
 
-router.get("/protected", authMiddleware, (req, res) => {
+router.use(authMiddleware);
+
+router.get("/ai", (req, res) => {
   res.json({ message: "This is a protected route", user: req.user });
 });
+
+router.post("/ai/comment", getLinkedInComment);
+// router.post("/ai/reply", getLinkedInComment);
 
 export default router;

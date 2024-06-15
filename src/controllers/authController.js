@@ -11,14 +11,10 @@ const generateTokens = (user) => {
     id: user._id,
     name: user.name,
     email: user.email,
-    personaCount: user.personaCount,
-    status: user.status,
-    userType: user.userType,
-    availableRequest: user.availableRequest,
   };
 
   const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
-    expiresIn: "1h",
+    expiresIn: "30d", // 3h for testing
   });
   const refreshToken = jwt.sign(
     { id: user._id },
@@ -30,10 +26,11 @@ const generateTokens = (user) => {
 };
 
 const register = async (req, res) => {
-  const { email, password } = req.body;
+  const { name, email, password } = req.body;
+  console.log(req.body);
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ email, password: hashedPassword });
+    const newUser = new User({ name, email, password: hashedPassword });
     await newUser.save();
     res.status(201).send("User registered");
   } catch (error) {
@@ -59,10 +56,6 @@ const login = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        personaCount: user.personaCount,
-        status: user.status,
-        userType: user.userType,
-        availableRequest: user.availableRequest,
       },
     });
   } catch (error) {
@@ -95,4 +88,23 @@ const refreshToken = async (req, res) => {
   }
 };
 
-export { register, login, refreshToken };
+const checkUserExists = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Find the user by email
+    const user = await User.findOne({ email }).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Return the user details
+    res.status(200).json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export { register, login, refreshToken, checkUserExists };
